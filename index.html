@@ -1,25 +1,19 @@
-const TelegramBot = require("node-telegram-bot-api");
-const axios = require("axios");
+const TelegramBot = require('node-telegram-bot-api');
+const axios = require('axios');
 
-console.log("🚀 Bot Started");
+console.log("ðŸš€ Bot Started");
 
-// ================= ENV =================
+// ðŸ” ENV
 const token = process.env.BOT_TOKEN;
-if (!token) {
-  console.error("❌ BOT_TOKEN missing in ENV");
-  process.exit(1);
-}
-
 const bot = new TelegramBot(token, { polling: true });
 
-// ================= CHANNELS =================
+// ðŸ“¢ YOUR CHANNELS
 const CHANNELS = [
-  "@URVIGAMER",
-  "@Supermastertrick",
-  "@Raja_Game_bunny"
+  "@Dnexon55Pros"
+  "@URVIGAMER"
 ];
 
-// ================= SMM PANEL CONFIG =================
+// ðŸ”¥ SMMLITE PANEL (YOUR CONFIG)
 const ACTIVE_PANEL = {
   name: "SMMLite",
   url: "https://smmlite.com/api/v2",
@@ -27,12 +21,12 @@ const ACTIVE_PANEL = {
   service: "5160"
 };
 
-// ================= SEND ORDER FUNCTION =================
+// ðŸ“¦ SEND ORDER FUNCTION
 async function sendOrder(link, quantity) {
   try {
-    console.log("📦 Sending Order...");
-    console.log("🔗 Link:", link);
-    console.log("📊 Quantity:", quantity);
+    console.log("ðŸ‘‰ Sending Link:", link);
+    console.log("ðŸ‘‰ Service:", ACTIVE_PANEL.service);
+    console.log("ðŸ‘‰ Quantity:", quantity);
 
     const res = await axios.post(ACTIVE_PANEL.url, {
       key: ACTIVE_PANEL.key,
@@ -42,67 +36,51 @@ async function sendOrder(link, quantity) {
       quantity: quantity
     });
 
-    console.log("📡 API Response:", res.data);
+    console.log("ðŸ‘‰ API Response:", res.data);
 
     if (res.data && res.data.order) {
-      console.log("✅ Order Success ID:", res.data.order);
+      console.log("âœ… Order Success ID:", res.data.order);
       return true;
     } else {
-      console.log("❌ Order Failed");
-      return false;
+      console.log("âŒ Order Failed");
     }
 
   } catch (err) {
-    console.log("❌ API Error:", err.message);
-    return false;
+    console.log("âŒ Error:", err.message);
   }
+  return false;
 }
 
-// ================= DUPLICATE PROTECTION =================
+// ðŸ§  DUPLICATE PROTECTION (FIXED)
 let processed = new Set();
 
-// ================= CHANNEL LISTENER =================
+// ðŸ“© CHANNEL POST LISTENER
 bot.on("channel_post", async (msg) => {
   try {
-    if (!msg.chat || !msg.message_id) return;
-
     const username = msg.chat.username ? "@" + msg.chat.username : null;
 
-    // Ignore unknown channels
+    // âŒ Ignore unknown channels
     if (!CHANNELS.includes(username)) return;
 
-    // ✅ FIXED TEMPLATE STRING
-    const uniqueKey = ${username}_${msg.message_id};
+    const uniqueKey = `${username}_${msg.message_id}`;
 
     if (processed.has(uniqueKey)) return;
     processed.add(uniqueKey);
 
-    // ✅ FIXED LINK FORMAT
-    const cleanUsername = username.replace("@", "");
-    const link = https://t.me/${cleanUsername}/${msg.message_id};
+    // ðŸ”— Correct link format
+    const link = `https://t.me/${username.replace("@", "")}/${msg.message_id}`;
 
-    console.log("📢 New Post Detected:", link);
+    console.log("ðŸ“¢ New Post Detected:", link);
 
-    // ================= TEST MODE =================
-    const burst = [1620]; // you can change
+    // âš¡ SAFE TEST MODE (ONLY ONE ORDER FIRST)
+    const burst = [1620];
 
     for (let qty of burst) {
       await sendOrder(link, qty);
-
-      // delay to avoid spam detection
-      await new Promise((resolve) => setTimeout(resolve, 30000));
+      await new Promise(r => setTimeout(r, 30000)); // 30 sec delay
     }
 
   } catch (err) {
-    console.log("❌ Listener Error:", err.message);
+    console.log("âŒ Error:", err.message);
   }
-});
-
-// ================= ERROR HANDLING =================
-bot.on("polling_error", (error) => {
-  console.log("❌ Polling Error:", error.message);
-});
-
-process.on("unhandledRejection", (err) => {
-  console.log("❌ Unhandled Rejection:", err.message);
 });
